@@ -1,9 +1,9 @@
 import zio.schema._
- import zio.schema.codec._
+import zio.schema.codec._
 import zio.Chunk
 
 object AutomaticSchemaDerivation extends App {
- 
+
   final case class Person(name: String, age: Int)
 
   object Person {
@@ -18,13 +18,13 @@ object AutomaticSchemaDerivation extends App {
       DeriveSchema.gen[PaymentMethod]
 
     final case class CreditCard(
-        number: String,
-        expirationMonth: Int,
-        expirationYear: Int
+      number: String,
+      expirationMonth: Int,
+      expirationYear: Int
     ) extends PaymentMethod
 
-    final case class WireTransfer(accountNumber: String, bankCode: String)
-        extends PaymentMethod
+    final case class WireTransfer(accountNumber: String, bankCode: String) extends PaymentMethod
+
   }
 
   final case class Customer(person: Person, paymentMethod: PaymentMethod)
@@ -33,7 +33,6 @@ object AutomaticSchemaDerivation extends App {
     implicit val schema: Schema[Customer] = DeriveSchema.gen[Customer]
   }
 
-
   // Create a customer instance
   val customer =
     Customer(
@@ -41,7 +40,7 @@ object AutomaticSchemaDerivation extends App {
       paymentMethod = PaymentMethod.CreditCard("1000100010001000", 6, 2024)
     )
 
-  // Create binary codec from customer 
+  // Create binary codec from customer
   val customerCodec: BinaryCodec[Customer] =
     ProtobufCodec.protobufCodec[Customer]
 
@@ -50,21 +49,18 @@ object AutomaticSchemaDerivation extends App {
 
   println(encodedCustomer)
 
-
-
-
-
   // Decode the byte array back to the person instance
   val decodedCustomer: Either[DecodeError, Customer] =
     customerCodec.decode(encodedCustomer)
 
-    println(decodedCustomer)
+  println(decodedCustomer)
   assert(Right(customer) == decodedCustomer)
-  val customerJsonCodec: zio.json.JsonCodec[Customer]=JsonCodec.jsonCodec(Customer.schema)
+  val customerJsonCodec: zio.json.JsonCodec[Customer] = JsonCodec.jsonCodec(Customer.schema)
 
-  val customerJson=customerJsonCodec.encodeJson(customer,None)
+  val customerJson = customerJsonCodec.encodeJson(customer, None)
 
   println(customerJson)
 
   println(customerJsonCodec.decoder.decodeJson(customerJson))
+
 }
